@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>우리 사진 보드</title>
+<meta name="description" content="링크로 들어와 사진을 올리고, 원하는 사진만 골라 A4 1·2·4·6장 모아찍기로 인쇄하는 사진 보드." />
+<meta name="theme-color" content="#F5F3EE" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%233F6B5B'/%3E%3Cpath d='M28 38h10l5-7h14l5 7h10v30H28z' fill='none' stroke='%23fff' stroke-width='6' stroke-linejoin='round'/%3E%3Ccircle cx='50' cy='53' r='10' fill='none' stroke='%23fff' stroke-width='6'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ======================= 상단 바 ======================= -->
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 100 100" width="26" height="26"><rect width="100" height="100" rx="26" fill="#3F6B5B"/><path d="M26 38h12l5-7h14l5 7h12v32H26z" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round"/><circle cx="50" cy="54" r="10" fill="none" stroke="#fff" stroke-width="7"/></svg>
+      </span>
+      <div class="brand-text">
+        <h1>우리 사진 보드</h1>
+        <p id="subtitle">링크만 있으면 누구나 사진을 올릴 수 있어요</p>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <span id="adminBadge" class="admin-badge" hidden>관리자 모드</span>
+      <button id="btnRefresh" class="icon-btn" type="button" title="새로고침" aria-label="새로고침">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>
+      </button>
+      <button id="btnAdmin" class="ghost-btn" type="button">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        <span id="btnAdminLabel">관리자</span>
+      </button>
+      <button id="btnUpload" class="primary-btn" type="button">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        <span>사진 올리기</span>
+      </button>
+    </div>
+  </header>
+
+  <div id="serverBanner" class="banner" hidden>
+    <div class="banner-body">
+      <strong id="bannerTitle">체험 모드</strong>
+      <p id="bannerText">서버에 연결하지 못해 이 브라우저에만 사진이 저장됩니다.</p>
+    </div>
+    <button id="btnSeed" class="link-btn" type="button" hidden>샘플 사진 넣어보기</button>
+  </div>
+
+  <main class="board">
+    <div id="grid" class="grid" aria-live="polite"></div>
+
+    <div id="emptyState" class="empty" hidden>
+      <div class="empty-art" aria-hidden="true">
+        <svg viewBox="0 0 120 120" width="96" height="96">
+          <rect x="14" y="28" width="92" height="68" rx="12" fill="#EDEAE2"/>
+          <path d="M40 44h10l5-7h12l5 7h8v36H40z" fill="#fff" stroke="#C9C3B4" stroke-width="3" stroke-linejoin="round"/>
+          <circle cx="60" cy="62" r="10" fill="none" stroke="#C9C3B4" stroke-width="3"/>
+        </svg>
+      </div>
+      <h2>아직 올라온 사진이 없어요</h2>
+      <p>첫 사진을 올려 보세요. 이름과 한 줄 메모를 함께 남길 수 있어요.</p>
+      <button id="btnUploadEmpty" class="primary-btn" type="button">＋ 첫 사진 올리기</button>
+    </div>
+
+    <div class="more-wrap">
+      <button id="btnMore" class="ghost-btn wide" type="button" hidden>더 보기</button>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span>사진을 누르면 크게 볼 수 있어요.</span>
+    <span class="dot">·</span>
+    <span>관리자 모드에서 고른 사진만 A4로 인쇄됩니다.</span>
+  </footer>
+</div>
+
+<!-- 사진 올리기 (모바일은 아래에서 올라오는 시트) -->
+<button id="fab" class="fab" type="button" aria-label="사진 올리기">
+  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<!-- ======================= 선택 바 ======================= -->
+<div id="selBar" class="selbar" hidden>
+  <div class="selbar-count"><strong id="selCount">0</strong>장 선택</div>
+  <div class="selbar-actions">
+    <button id="btnSelClear" class="sel-btn" type="button">선택 해제</button>
+    <button id="btnSelDelete" class="sel-btn danger" type="button">선택 삭제</button>
+    <button id="btnSelPrint" class="sel-btn primary" type="button">인쇄</button>
+  </div>
+</div>
+
+<!-- ======================= 사진 올리기 시트 ======================= -->
+<div id="uploadSheet" class="overlay" hidden>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="uploadTitle">
+    <div class="sheet-head">
+      <h2 id="uploadTitle">사진 올리기</h2>
+      <button class="close-btn" type="button" data-close="uploadSheet" aria-label="닫기">✕</button>
+    </div>
+
+    <div class="sheet-body">
+      <div id="dropZone" class="dropzone" tabindex="0" role="button">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
+        </svg>
+        <p class="dz-main">사진을 고르거나 여기로 끌어다 놓으세요</p>
+        <p class="dz-sub">한 번에 여러 장도 괜찮아요 · 자동으로 가볍게 줄여서 올라갑니다</p>
+        <input id="fileInput" type="file" accept="image/*" multiple hidden />
+      </div>
+
+      <div id="pickedWrap" class="picked-wrap" hidden>
+        <div class="picked-head">
+          <span><strong id="pickedCount">0</strong>장 고름</span>
+          <button id="btnPickMore" class="link-btn" type="button">더 고르기</button>
+        </div>
+        <div id="pickedList" class="picked-list"></div>
+      </div>
+
+      <label class="field">
+        <span class="field-label">작성자 이름 <em>(필수)</em></span>
+        <input id="authorInput" type="text" maxlength="20" placeholder="예) 은영, 3학년 2반 김민수" autocomplete="name" />
+      </label>
+
+      <label class="field">
+        <span class="field-label">한 줄 메모 <em>(선택)</em></span>
+        <input id="memoInput" type="text" maxlength="80" placeholder="예) 운동회 단체 사진" />
+      </label>
+      <p class="field-hint">고른 사진 모두에 같은 이름·메모가 붙습니다. 사진마다 다르게 남기려면 나눠서 올려 주세요.</p>
+    </div>
+
+    <div class="sheet-foot">
+      <button class="ghost-btn" type="button" data-close="uploadSheet">취소</button>
+      <button id="btnDoUpload" class="primary-btn" type="button" disabled>올리기</button>
+    </div>
+
+    <div id="uploadProgress" class="progress" hidden>
+      <div class="progress-bar"><span id="progressFill"></span></div>
+      <p id="progressText">사진을 줄이는 중…</p>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= 관리자 비밀번호 ======================= -->
+<div id="adminSheet" class="overlay" hidden>
+  <div class="sheet-panel narrow" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+    <div class="sheet-head">
+      <h2 id="adminTitle">관리자 모드</h2>
+      <button class="close-btn" type="button" data-close="adminSheet" aria-label="닫기">✕</button>
+    </div>
+    <form id="adminForm" class="sheet-body">
+      <p class="sheet-lead">비밀번호를 넣으면 사진을 골라 <strong>인쇄</strong>하거나 <strong>삭제</strong>할 수 있어요.</p>
+      <label class="field">
+        <span class="field-label">관리자 비밀번호</span>
+        <input id="adminPass" type="password" inputmode="text" autocomplete="current-password" placeholder="비밀번호" />
+      </label>
+      <p id="adminError" class="error-text" hidden>비밀번호가 맞지 않습니다.</p>
+      <div class="sheet-foot flat">
+        <button class="ghost-btn" type="button" data-close="adminSheet">취소</button>
+        <button id="btnUnlock" class="primary-btn" type="submit">들어가기</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ======================= 인쇄 설정 ======================= -->
+<div id="printSheet" class="overlay" hidden>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="printTitle">
+    <div class="sheet-head">
+      <h2 id="printTitle">인쇄 설정</h2>
+      <button class="close-btn" type="button" data-close="printSheet" aria-label="닫기">✕</button>
+    </div>
+
+    <div class="sheet-body">
+      <p class="print-summary">선택한 사진 <strong id="printCount">0</strong>장 · A4 <strong id="printPages">0</strong>장으로 인쇄</p>
+
+      <div class="opt-label">한 장에 몇 장씩 모을까요?</div>
+      <div id="layoutGrid" class="layout-grid" role="radiogroup" aria-label="A4 한 장에 모을 사진 수">
+        <button class="layout-opt" type="button" data-per="1" role="radio" aria-checked="false">
+          <span class="mini m1"><i></i></span><b>1장씩</b><em>A4 1장에 1장</em>
+        </button>
+        <button class="layout-opt" type="button" data-per="2" role="radio" aria-checked="false">
+          <span class="mini m2"><i></i><i></i></span><b>2장씩</b><em>A4 1장에 2장</em>
+        </button>
+        <button class="layout-opt" type="button" data-per="4" role="radio" aria-checked="false">
+          <span class="mini m4"><i></i><i></i><i></i><i></i></span><b>4장씩</b><em>A4 1장에 4장</em>
+        </button>
+        <button class="layout-opt" type="button" data-per="6" role="radio" aria-checked="false">
+          <span class="mini m6"><i></i><i></i><i></i><i></i><i></i><i></i></span><b>6장씩</b><em>A4 1장에 6장</em>
+        </button>
+      </div>
+
+      <div class="switch-row">
+        <label class="switch">
+          <span>작성자 이름 표시</span>
+          <input id="optName" type="checkbox" checked />
+          <i aria-hidden="true"></i>
+        </label>
+        <label class="switch">
+          <span>사진 꽉 채우기 <em>(잘릴 수 있음)</em></span>
+          <input id="optCover" type="checkbox" />
+          <i aria-hidden="true"></i>
+        </label>
+      </div>
+      <p class="field-hint">이름 표시를 끄면 사진만 나옵니다. ‘꽉 채우기’를 끄면 사진이 잘리지 않고 전체가 다 나옵니다.</p>
+
+      <div class="preview-head">
+        <span>첫 장 미리보기</span>
+        <span id="previewNote" class="preview-note"></span>
+      </div>
+      <div id="previewHost" class="preview-host"></div>
+    </div>
+
+    <div class="sheet-foot">
+      <button class="ghost-btn" type="button" data-close="printSheet">닫기</button>
+      <button id="btnDoPrint" class="primary-btn" type="button">인쇄하기 · PDF 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= 크게 보기 ======================= -->
+<div id="lightbox" class="lightbox" hidden>
+  <button class="lb-close" type="button" data-close="lightbox" aria-label="닫기">✕</button>
+  <button class="lb-nav prev" type="button" id="lbPrev" aria-label="이전 사진">‹</button>
+  <figure class="lb-figure">
+    <img id="lbImg" alt="" />
+    <figcaption>
+      <strong id="lbAuthor"></strong>
+      <span id="lbMemo"></span>
+      <time id="lbDate"></time>
+    </figcaption>
+  </figure>
+  <button class="lb-nav next" type="button" id="lbNext" aria-label="다음 사진">›</button>
+</div>
+
+<!-- 인쇄 전용 출력 영역 (화면에서는 숨김) -->
+<div id="printRoot" class="print-root" aria-hidden="true"></div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
