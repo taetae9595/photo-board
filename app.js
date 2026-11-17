@@ -923,7 +923,7 @@
         toast('관리자 모드입니다. 사진을 눌러 고르세요.');
       } else {
         $('adminError').hidden = false;
-        $('adminError').textContent = '비밀번호가 맞지 않습니다. (여러 번 틀리면 잠시 잠깁니다)';
+        $('adminError').textContent = '비밀번호가 맞지 않습니다.';
         $('adminPass').select();
       }
     }).catch(function (err) {
